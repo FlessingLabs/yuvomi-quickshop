@@ -80,8 +80,11 @@ You may not edit the shopping list, or there is no shopping list yet. A notice a
 **I cannot create or change items.**
 QuickShop is view-only for you. An admin can change this under *Settings → Household → Roles & permissions → QuickShop*.
 
-**"QuickShop service unreachable"**
-First check that you opened Yuvomi at the right address (the one with QuickShop, for example port 8088). If that does not help, the problem is on the server. Let your admin know.
+**"This Yuvomi has no module storage"**
+QuickShop 2 needs a Yuvomi version with module storage. Let your admin know: they can install that Yuvomi, or use QuickShop 1.1 on an unmodified Yuvomi.
+
+**"Somebody just changed this item"**
+Somebody else saved the same item just before you. QuickShop now shows their version. Check it and save your change again if you still want it; nothing is overwritten without asking.
 
 **Does everyone in the household see the same catalogue?**
 Yes. The catalogue belongs to the whole household, just like the shopping list.

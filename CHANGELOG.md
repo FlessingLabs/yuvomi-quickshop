@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.0 – unveröffentlicht (Branch `feat/core-storage`)
+
+**Braucht Yuvomi mit Modulspeicher** (`/api/v1/modules/:id/records`, FlessingLabs-Fork, Branch `feat/module-storage`). Kein reguläres Update für unverändertes Yuvomi – dafür bleibt 1.1 auf `main`.
+
+- Der Katalog liegt im Yuvomi-Modulspeicher statt in einem eigenen Dienst. Kein Container, kein Proxy, keine Anfrage außerhalb von `/api/v1`.
+- Katalog-IDs sind UUIDs; Änderungen tragen eine Revision. Konflikte zweier Geräte werden angezeigt statt überschrieben.
+- Rechte kommen aus `ext:flessinglabs-quickshop` (`/auth/me`).
+- Verständliche Meldungen: Yuvomi ohne Modulspeicher, Modul ausgeschaltet, kein Zugriff, Katalog voll.
+- Ausdrücklicher Import aus einer JSON-Datei; `tools/export-sidecar-db.mjs` exportiert einen 1.x-Katalog nur lesend.
+- Entfernt: `sidecar/`, `deploy/`, Image-Workflow (bleiben in 1.1 auf `main`).
+
 ## 1.1.0 – 2026-11-01
 
 - **Ein Container statt zwei:** Der QuickShop-Dienst reicht jetzt alles außerhalb seines Pfads selbst an Yuvomi durch. Caddy entfällt. Abschalten mit `PROXY_YUVOMI=false` für Installationen mit eigenem Reverse-Proxy.

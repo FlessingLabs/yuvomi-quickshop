@@ -80,8 +80,11 @@ Ihr dürft die Einkaufsliste nicht bearbeiten, oder es gibt noch keine Einkaufsl
 **Ich kann keine Artikel anlegen oder ändern.**
 Für euch ist QuickShop nur zum Ansehen freigegeben. Ein Admin kann das unter *Einstellungen → Haushalt → Rollen & Berechtigungen → QuickShop* ändern.
 
-**„QuickShop-Dienst nicht erreichbar“**
-Prüft zuerst, ob ihr Yuvomi über die richtige Adresse geöffnet habt (die mit QuickShop, z. B. Port 8088). Hilft das nicht, liegt das Problem beim Server. Sagt eurem Admin Bescheid.
+**„Dieses Yuvomi hat keinen Modulspeicher“**
+QuickShop 2 braucht eine Yuvomi-Version mit Modulspeicher. Sagt eurem Admin Bescheid. Er kann das passende Yuvomi installieren oder für ein unverändertes Yuvomi QuickShop 1.1 nehmen.
+
+**„Jemand hat diesen Artikel gerade geändert“**
+Jemand anderes hat denselben Artikel kurz vor euch gespeichert. QuickShop zeigt jetzt dessen Fassung. Prüft sie und speichert eure Änderung bei Bedarf noch einmal; überschrieben wird nichts ungefragt.
 
 **Sehen alle im Haushalt denselben Katalog?**
 Ja. Der Katalog gehört dem ganzen Haushalt, genau wie die Einkaufsliste.
