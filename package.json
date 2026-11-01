@@ -7,7 +7,7 @@
   "type": "module",
   "engines": { "node": ">=22.13" },
   "scripts": {
-    "test": "node --test sidecar/test/ test/module/",
+    "test": "node --test \"sidecar/test/*.test.js\" \"test/module/*.test.js\"",
     "start": "node sidecar/src/main.js"
   }
 }
