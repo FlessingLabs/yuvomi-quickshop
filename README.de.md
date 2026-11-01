@@ -73,6 +73,8 @@ YUVOMI_URL=http://yuvomi:3000 docker compose up -d
 
 ### Schritt 3: die neue Adresse nutzen
 
+**Tipp: Yuvomis alte Adresse behalten.** Zwei Container können sich keinen Port teilen, aber tauschen: Der Yuvomi-Container bekommt einen anderen Host-Port (z. B. `3001`), der QuickShop-Container Yuvomis alten Port (`3000`), und **Yuvomi URL** wird `http://<unraid-ip>:3001`. Lesezeichen, installierte App und Anmeldungen funktionieren dann unverändert weiter.
+
 **Yuvomi ab jetzt über `http://<server>:8088` öffnen.** Das gilt auch für Lesezeichen und die installierte App; einmal neu anmelden. Yuvomi selbst bleibt unverändert und antwortet weiter auf seinem alten Port, QuickShop funktioniert aber nur über den neuen.
 
 ### Prüfen

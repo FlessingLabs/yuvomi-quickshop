@@ -73,6 +73,8 @@ YUVOMI_URL=http://yuvomi:3000 docker compose up -d
 
 ### Step 3: use the new address
 
+**Tip: keep Yuvomi's old address.** Two containers cannot share one host port, but they can swap: give the Yuvomi container another host port (e.g. `3001`), give the QuickShop container Yuvomi's old port (`3000`) and set **Yuvomi URL** to `http://<unraid-ip>:3001`. Bookmarks, the installed app and sessions keep working unchanged.
+
 **Open Yuvomi at `http://<server>:8088` from now on**, including bookmarks and the installed app (sign in once more). Yuvomi itself is unchanged and still answers on its old port, but QuickShop only works through the new one.
 
 ### Check
