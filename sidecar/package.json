@@ -1,0 +1,12 @@
+{
+  "name": "flessinglabs-quickshop-sidecar",
+  "version": "1.0.0",
+  "description": "Storage service for the FlessingLabs QuickShop Yuvomi module",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "start": "node src/main.js"
+  }
+}

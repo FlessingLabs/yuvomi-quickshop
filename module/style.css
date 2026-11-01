@@ -1,0 +1,189 @@
+/*
+ * FlessingLabs QuickShop
+ * Nur Yuvomi-Tokens (tokens.css), keine eigenen Farben: die Seite folgt Hell/Dunkel
+ * und dem Haushalts-Akzent. Tippflaechen mindestens 48px fuer Telefon und Tablet.
+ */
+
+.qs {
+  --qs-tap: 48px;
+}
+
+.qs-target {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.qs-target__select {
+  min-height: 40px;
+  max-width: 14rem;
+}
+.qs-target__single {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.qs-search {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding-block: var(--space-2, 8px);
+  background: var(--color-bg);
+}
+.qs-search__input {
+  width: 100%;
+  min-height: var(--qs-tap);
+  font-size: max(16px, var(--text-base)); /* unter 16px zoomt iOS beim Fokus */
+}
+
+.qs-hint {
+  margin: var(--space-2, 8px) 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.qs-create {
+  width: 100%;
+  min-height: var(--qs-tap);
+  justify-content: flex-start;
+  margin-block: var(--space-2, 8px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.qs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.qs-row {
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.qs-row__line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  min-height: 56px;
+}
+.qs-row__main {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--qs-tap);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--space-2, 8px) 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: default;
+}
+button.qs-row__main {
+  cursor: pointer;
+}
+button.qs-row__main:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+.qs-row__name {
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+.qs-row__meta {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.qs-row__add {
+  flex: none;
+  width: var(--qs-tap);
+  height: var(--qs-tap);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+.qs-row__add[aria-busy="true"] {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.qs-edit {
+  display: grid;
+  gap: var(--space-3, 12px);
+  padding: 0 0 var(--space-4, 16px);
+}
+.qs-edit__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3, 12px);
+}
+@media (max-width: 420px) {
+  .qs-edit__row { grid-template-columns: 1fr; }
+}
+.qs-edit__field {
+  display: grid;
+  gap: 4px;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+.qs-edit__field .form-input {
+  min-height: var(--qs-tap);
+  font-size: max(16px, var(--text-base));
+}
+.qs-stepper {
+  display: grid;
+  grid-template-columns: var(--qs-tap) 1fr var(--qs-tap);
+  gap: 4px;
+}
+.qs-stepper__btn {
+  min-height: var(--qs-tap);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.qs-stepper__input {
+  text-align: center;
+  min-width: 0;
+}
+.qs-edit__error {
+  margin: 0;
+  color: var(--color-danger, #c0392b);
+  font-size: var(--text-sm);
+}
+.qs-edit__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+}
+.qs-edit__actions .btn {
+  min-height: var(--qs-tap);
+}
+.qs-edit__delete {
+  margin-inline-start: auto;
+}
+
+.qs-message {
+  list-style: none;
+  padding: var(--space-6, 24px) 0;
+  text-align: center;
+}
+.qs-message__title {
+  margin: 0 0 var(--space-2, 8px);
+  font-size: var(--text-lg);
+  color: var(--color-text-primary);
+}
+.qs-message__text {
+  margin: 0 0 var(--space-3, 12px);
+  color: var(--color-text-secondary);
+}
