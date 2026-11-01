@@ -1,16 +1,16 @@
-# QuickShop – Anleitung
+# Einkaufszettel – Anleitung
 
 **Deutsch** · [English](GUIDE.md)
 
-QuickShop ist euer Merkzettel für Dinge, die ihr immer wieder kauft. Ihr legt einen Artikel **einmal** an und setzt ihn danach mit **einem Tipp** auf die Einkaufsliste.
+Einkaufszettel ist euer Merkzettel für Dinge, die ihr immer wieder kauft. Ihr legt einen Artikel **einmal** an und setzt ihn danach mit **einem Tipp** auf die Einkaufsliste.
 
-Ihr findet QuickShop in Yuvomi in der Navigation unter **QuickShop**.
+Ihr findet Einkaufszettel in Yuvomi in der Navigation unter **Einkaufszettel**.
 
 ## Die Seite auf einen Blick
 
 ```text
 ┌───────────────────────────────────────────┐
-│ QuickShop                Ziel: Wocheneinkauf │  ← auf diese Liste kommt alles
+│ Einkaufszettel                Ziel: Wocheneinkauf │  ← auf diese Liste kommt alles
 │ ┌───────────────────────────────────────┐ │
 │ │ Artikel suchen oder neu anlegen …     │ │  ← suchen UND anlegen
 │ └───────────────────────────────────────┘ │
@@ -41,7 +41,7 @@ Ihr könnt beliebig viele Artikel nacheinander antippen.
 
 Es entsteht keine zweite Zeile. Stattdessen:
 
-| Auf der Einkaufsliste steht … | QuickShop macht daraus … |
+| Auf der Einkaufsliste steht … | Einkaufszettel macht daraus … |
 |---|---|
 | `Milch 1`, noch nicht gekauft | `Milch 3` (1 + Standardanzahl 2) |
 | `Milch`, schon abgehakt | `Milch 2`, wieder offen |
@@ -78,13 +78,17 @@ Einfach tippen: Die Liste zeigt sofort nur noch passende Artikel. Es reicht ein 
 Ihr dürft die Einkaufsliste nicht bearbeiten, oder es gibt noch keine Einkaufsliste. Ein Hinweis oben auf der Seite sagt, was davon zutrifft.
 
 **Ich kann keine Artikel anlegen oder ändern.**
-Für euch ist QuickShop nur zum Ansehen freigegeben. Ein Admin kann das unter *Einstellungen → Haushalt → Rollen & Berechtigungen → QuickShop* ändern.
+Für euch ist Einkaufszettel nur zum Ansehen freigegeben. Ein Admin kann das unter *Einstellungen → Haushalt → Rollen & Berechtigungen → Einkaufszettel* ändern.
 
 **„Dieses Yuvomi hat keinen Modulspeicher“**
-QuickShop 2 braucht eine Yuvomi-Version mit Modulspeicher. Sagt eurem Admin Bescheid. Er kann das passende Yuvomi installieren oder für ein unverändertes Yuvomi QuickShop 1.1 nehmen.
+Einkaufszettel 2 braucht eine Yuvomi-Version mit Modulspeicher. Sagt eurem Admin Bescheid. Er kann das passende Yuvomi installieren oder für ein unverändertes Yuvomi Einkaufszettel 1.1 nehmen.
 
 **„Jemand hat diesen Artikel gerade geändert“**
-Jemand anderes hat denselben Artikel kurz vor euch gespeichert. QuickShop zeigt jetzt dessen Fassung. Prüft sie und speichert eure Änderung bei Bedarf noch einmal; überschrieben wird nichts ungefragt.
+Jemand anderes hat denselben Artikel kurz vor euch gespeichert. Einkaufszettel zeigt jetzt dessen Fassung. Prüft sie und speichert eure Änderung bei Bedarf noch einmal; überschrieben wird nichts ungefragt.
 
 **Sehen alle im Haushalt denselben Katalog?**
 Ja. Der Katalog gehört dem ganzen Haushalt, genau wie die Einkaufsliste.
+
+## Den fertigen Einkaufszettel öffnen
+
+Oben auf **Zur Einkaufsliste** tippen. Der Button öffnet Yuvomis vorhandene Einkaufsliste unter `/shopping`. Dort könnt ihr die zusammengestellten Artikel beim Einkaufen abhaken.

@@ -59,7 +59,9 @@ export async function render(container, { signal } = {}) {
   container.insertAdjacentHTML('beforeend',
     renderPageHeader({
       title: renderPageTitle(esc(tr('title'))),
-      actions: renderPageActions('<div class="qs-target" data-qs="target"></div>'),
+      actions: renderPageActions(`
+        <div class="qs-target" data-qs="target"></div>
+        <a class="btn btn--secondary qs-shopping-link" href="/shopping">${esc(tr('hint.openShopping'))}</a>`),
     })
     + renderPageBody({
       className: 'qs',

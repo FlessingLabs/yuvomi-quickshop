@@ -1,4 +1,7 @@
-# FlessingLabs QuickShop 2
+# FlessingLabs Einkaufszettel 2
+
+
+Der Anzeigename ist jetzt **Einkaufszettel** (bisher QuickShop). Der Button **Zur Einkaufsliste** öffnet die zusammengestellte Liste unter `/shopping`. Die technische Modul-ID und der Repository-Name bleiben unverändert, damit bestehende Daten erhalten bleiben.
 
 **Deutsch** · [English](README.md)
 

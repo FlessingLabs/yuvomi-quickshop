@@ -1,8 +1,8 @@
 {
   "manifestVersion": 1,
   "id": "flessinglabs-quickshop",
-  "name": "FlessingLabs QuickShop",
-  "version": "2.0.0",
+  "name": "FlessingLabs Einkaufszettel",
+  "version": "2.0.1",
   "description": "Artikelkatalog für die Einkaufsliste: Artikel einmal anlegen, mit einem Tipp auf die Liste setzen. Version 2 braucht Yuvomi mit Modulspeicher (/api/v1/modules/:id/records).",
   "entry": "index.js",
   "style": "style.css",
@@ -13,7 +13,7 @@
   },
   "menu": {
     "show": true,
-    "label": "QuickShop",
+    "label": "Einkaufszettel",
     "labelKey": "menu",
     "icon": "shopping-basket",
     "order": 25
@@ -27,7 +27,7 @@
   "capabilities": {
     "permissions": {
       "module": {
-        "label": "QuickShop",
+        "label": "Einkaufszettel",
         "labelKey": "module",
         "icon": "shopping-basket"
       }

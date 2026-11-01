@@ -1,4 +1,7 @@
-# FlessingLabs QuickShop 2
+# FlessingLabs Einkaufszettel 2
+
+
+The display name is now **Einkaufszettel** (formerly QuickShop). **Open shopping list** opens the assembled list at `/shopping`. The technical module ID and repository name stay unchanged to preserve existing data.
 
 [Deutsch](README.de.md) · **English**
 

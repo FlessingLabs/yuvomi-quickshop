@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.1
+
+- Anzeigename zu **Einkaufszettel** geändert; technische Modul-ID und vorhandene Daten bleiben erhalten.
+- Sichtbarer Button **Zur Einkaufsliste** im Seitenkopf öffnet `/shopping` auf derselben Yuvomi-Installation.
+
 ## 2.0.0 – unveröffentlicht (Branch `feat/core-storage`)
 
 **Braucht Yuvomi mit Modulspeicher** (`/api/v1/modules/:id/records`, FlessingLabs-Fork, Branch `feat/module-storage`). Kein reguläres Update für unverändertes Yuvomi – dafür bleibt 1.1 auf `main`.

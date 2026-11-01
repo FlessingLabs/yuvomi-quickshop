@@ -1,16 +1,16 @@
-# QuickShop – User guide
+# Einkaufszettel – User guide
 
 [Deutsch](ANLEITUNG.md) · **English**
 
-QuickShop is your household's list of things you buy again and again. Create an item **once**, then put it on the shopping list with **one tap**.
+Einkaufszettel is your household's list of things you buy again and again. Create an item **once**, then put it on the shopping list with **one tap**.
 
-You find QuickShop in Yuvomi's navigation under **QuickShop**.
+You find Einkaufszettel in Yuvomi's navigation under **Einkaufszettel**.
 
 ## The page at a glance
 
 ```text
 ┌───────────────────────────────────────────┐
-│ QuickShop                Target: Weekly shop │  ← everything goes onto this list
+│ Einkaufszettel                Target: Weekly shop │  ← everything goes onto this list
 │ ┌───────────────────────────────────────┐ │
 │ │ Search or create an item …            │ │  ← search AND create
 │ └───────────────────────────────────────┘ │
@@ -41,7 +41,7 @@ You can tap as many items as you like, one after another.
 
 No second row appears. Instead:
 
-| The shopping list has … | QuickShop turns it into … |
+| The shopping list has … | Einkaufszettel turns it into … |
 |---|---|
 | `Milk 1`, not bought yet | `Milk 3` (1 + default quantity 2) |
 | `Milk`, already checked off | `Milk 2`, open again |
@@ -78,13 +78,17 @@ Just type: the list immediately shows only matching items. Part of the name is e
 You may not edit the shopping list, or there is no shopping list yet. A notice at the top of the page tells you which.
 
 **I cannot create or change items.**
-QuickShop is view-only for you. An admin can change this under *Settings → Household → Roles & permissions → QuickShop*.
+Einkaufszettel is view-only for you. An admin can change this under *Settings → Household → Roles & permissions → Einkaufszettel*.
 
 **"This Yuvomi has no module storage"**
-QuickShop 2 needs a Yuvomi version with module storage. Let your admin know: they can install that Yuvomi, or use QuickShop 1.1 on an unmodified Yuvomi.
+Einkaufszettel 2 needs a Yuvomi version with module storage. Let your admin know: they can install that Yuvomi, or use Einkaufszettel 1.1 on an unmodified Yuvomi.
 
 **"Somebody just changed this item"**
-Somebody else saved the same item just before you. QuickShop now shows their version. Check it and save your change again if you still want it; nothing is overwritten without asking.
+Somebody else saved the same item just before you. Einkaufszettel now shows their version. Check it and save your change again if you still want it; nothing is overwritten without asking.
 
 **Does everyone in the household see the same catalogue?**
 Yes. The catalogue belongs to the whole household, just like the shopping list.
+
+## Open the finished shopping list
+
+Tap **Open shopping list** at the top. This opens Yuvomi’s existing shopping page at `/shopping`, where you can check off the items while shopping.

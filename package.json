@@ -1,6 +1,6 @@
 {
   "name": "flessinglabs-quickshop",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Artikelkatalog für die Einkaufsliste von Yuvomi (Version 2: Katalog im Yuvomi-Modulspeicher)",
   "license": "MIT",
   "private": true,
