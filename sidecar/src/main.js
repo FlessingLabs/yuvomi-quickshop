@@ -6,6 +6,7 @@ import path from 'node:path';
 import { openStore } from './store.js';
 import { createAuthResolver } from './auth.js';
 import { createServer, PREFIX } from './server.js';
+import { createPassThrough } from './proxy.js';
 
 const port = Number(process.env.PORT || 8080);
 const dataDir = process.env.DATA_DIR || '/data';
@@ -19,9 +20,14 @@ const resolveAuth = createAuthResolver({
   cacheMs: Number(process.env.AUTH_CACHE_MS || 5000),
 });
 
-const server = createServer({ store, resolveAuth, publicOrigins });
+// Standard: der Dienst ist zugleich der Eingang fuer Yuvomi. Wer schon einen
+// eigenen Reverse-Proxy hat, schaltet das mit PROXY_YUVOMI=false ab.
+const proxyYuvomi = process.env.PROXY_YUVOMI !== 'false';
+const passThrough = proxyYuvomi ? createPassThrough(yuvomiUrl) : null;
+
+const server = createServer({ store, resolveAuth, publicOrigins, passThrough });
 server.listen(port, () => {
-  console.log(`[quickshop] listening on :${port}${PREFIX}, Yuvomi at ${yuvomiUrl}`);
+  console.log(`[quickshop] listening on :${port}${PREFIX}, Yuvomi at ${yuvomiUrl}${proxyYuvomi ? ' (proxying all other paths to it)' : ''}`);
 });
 
 function shutdown() {

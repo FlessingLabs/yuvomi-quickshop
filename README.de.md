@@ -29,109 +29,91 @@ Kostenlos und Open Source (MIT) von FlessingLabs.
 ## Aufbau
 
 ```text
-Browser ──► Caddy (:8088) ──┬─ /api/extensions/flessinglabs-quickshop/* ─► quickshop (Katalog, SQLite)
-                            └─ alles andere ──────────────────────────────► yuvomi (unverändert)
+Browser ──► QuickShop-Container (:8088) ──┬─ /api/extensions/flessinglabs-quickshop/*  → Katalog (SQLite)
+                                          └─ alles andere → unverändert weiter → Yuvomi
 ```
 
 | Teil | Ordner | Aufgabe |
 |---|---|---|
 | Modul | `module/` | Die Seite in Yuvomi. Kommt in Yuvomis `modules/`-Ordner. |
-| Katalogdienst | `sidecar/` | Speichert den Katalog in einer eigenen SQLite-Datei. Node ohne npm-Abhängigkeiten. |
-| Proxy | `deploy/` | Caddy, damit Yuvomi und der Katalogdienst unter **derselben Adresse** erreichbar sind. |
+| QuickShop-Container | `sidecar/` | Speichert den Katalog in einer eigenen SQLite-Datei und ist der Eingang zu Yuvomi. Node ohne npm-Abhängigkeiten. Image: `ghcr.io/flessinglabs/yuvomi-quickshop`. |
+| Bereitstellung | `deploy/` | Unraid-Template und Docker-Compose-Datei. |
 
-**Warum ein eigener Dienst?** Yuvomi-Module sind reiner Browser-Code und haben keinen Datenspeicher. Der von Yuvomi dokumentierte Weg für Moduldaten ist ein Dienst neben Yuvomi ([MODULES.md, „Modules With A Backend Service“](https://github.com/ulsklyc/yuvomi/blob/main/MODULES.md#modules-with-a-backend-service)). QuickShop öffnet nie `yuvomi.db` und ändert keine Zeile am Yuvomi-Kern. Die Einkaufsliste wird ausschließlich über Yuvomis offizielle API beschrieben. Details: [docs/MACHBARKEIT.md](docs/MACHBARKEIT.md).
+**Warum überhaupt ein Container?** Yuvomi-Module sind reiner Browser-Code. Yuvomis Installer kopiert nur `.js`- und `.css`-Dateien und führt auf dem Server nichts aus, und Yuvomi hat keinen Speicher für Moduldaten. Der von Yuvomi dokumentierte Weg ist ein Dienst neben Yuvomi ([MODULES.md, „Modules With A Backend Service“](https://github.com/ulsklyc/yuvomi/blob/main/MODULES.md#modules-with-a-backend-service)).
 
-## Voraussetzungen
-
-- Yuvomi per Docker Compose, mit eingebundenem `modules/`-Ordner (Standard in Yuvomis `docker-compose.yml`).
-- Docker mit Compose v2.
-- Für Entwicklung und Tests: Node.js ab 22.13.
+**Warum Yuvomi darüber öffnen?** Der Browser muss Yuvomi und den Katalog unter derselben Adresse erreichen (dasselbe Session-Cookie). Yuvomi reicht `/api/extensions/...` aber nicht selbst weiter. Also beantwortet der QuickShop-Container seinen eigenen Pfad und reicht alles andere unverändert an Yuvomi durch. QuickShop öffnet nie `yuvomi.db` und ändert keine Zeile am Yuvomi-Kern. Die Einkaufsliste wird nur über Yuvomis offizielle API beschrieben. Details: [docs/MACHBARKEIT.md](docs/MACHBARKEIT.md).
 
 ## Installation
 
-Die Beispiele gehen von Yuvomis Standard-Compose aus: Projektordner `yuvomi`, Container `yuvomi`, Netzwerk `yuvomi_default`, Modulordner `./modules`.
+Zwei Schritte: Das **Modul** kommt in Yuvomi, der **Container** läuft neben Yuvomi.
 
-### 1. Modul nach Yuvomi kopieren
+### Schritt 1: Modul in Yuvomi installieren
 
-```sh
-git clone https://github.com/FlessingLabs/yuvomi-quickshop.git flessinglabs-quickshop
-cp -r flessinglabs-quickshop/module /pfad/zu/yuvomi/modules/flessinglabs-quickshop
-```
+Über Yuvomis Oberfläche (im Yuvomi-Container muss `MODULES_ALLOW_WEB_INSTALL=true` gesetzt sein): Einstellungen → Module → Eigenes Modul hinzufügen, Adresse `https://github.com/FlessingLabs/yuvomi-quickshop/tree/main/module`, danach das Modul einschalten.
 
-Der Ordnername muss `flessinglabs-quickshop` lauten. Yuvomi erkennt das Modul ohne Neustart. Ein von Hand kopiertes Modul ist sofort aktiv.
+Oder von Hand: den Ordner `module` als `flessinglabs-quickshop` in Yuvomis Modulpfad kopieren. Auf Unraid ist das standardmäßig `/mnt/user/appdata/yuvomi/modules/flessinglabs-quickshop`.
 
-*Alternative:* Ist in Yuvomi `MODULES_ALLOW_WEB_INSTALL=true` gesetzt, geht das auch unter Einstellungen → Module → Eigenes Modul hinzufügen, mit der Adresse `https://github.com/FlessingLabs/yuvomi-quickshop/tree/main/module`. Das Modul muss danach freigeschaltet werden.
+### Schritt 2a: Container auf Unraid
 
-### 2. Katalogdienst und Proxy starten
+1. Docker → Container hinzufügen → im Feld „Template“ die Adresse `https://raw.githubusercontent.com/FlessingLabs/yuvomi-quickshop/main/deploy/unraid/flessinglabs-quickshop.xml` einfügen. Alternativ das XML nach `/boot/config/plugins/dockerMan/templates-user/` kopieren.
+2. **Yuvomi URL:** deine Unraid-IP und Yuvomis Port, z. B. `http://192.168.1.10:3000`.
+3. **WebUI Port:** der Port, über den du Yuvomi ab jetzt öffnest (Standard `8088`).
+4. Übernehmen.
+5. Im **Yuvomi**-Container die Variable `TRUST_PROXY` (erweiterte Ansicht) auf `172.16.0.0/12` setzen und übernehmen. Sonst sieht Yuvomi alle Zugriffe als ein einziges Gerät, und die Anmelde- und Anfragebegrenzung trifft den ganzen Haushalt gemeinsam.
 
-Den Namen des Yuvomi-Netzwerks prüfen:
-
-```sh
-docker network ls | grep yuvomi        # erwartet: yuvomi_default
-```
-
-Heißt es anders, eine `.env` in `deploy/` anlegen mit `YUVOMI_NETWORK=<name>`. Dort lässt sich auch der Port ändern (`QUICKSHOP_HTTP_PORT`, Standard 8088).
+### Schritt 2b: Container mit Docker Compose
 
 ```sh
-cd flessinglabs-quickshop/deploy
-docker compose up -d --build
-docker compose ps                      # quickshop: healthy
+git clone https://github.com/FlessingLabs/yuvomi-quickshop.git
+cd yuvomi-quickshop/deploy
+YUVOMI_URL=http://yuvomi:3000 docker compose up -d
 ```
 
-### 3. Yuvomi auf den Proxy einstellen
+`YUVOMI_URL` ist die Adresse, über die der Container Yuvomi erreicht. Im gemeinsamen Compose-Netzwerk ist das `http://yuvomi:3000`, sonst Server-Adresse und Port. In Yuvomis `.env` `TRUST_PROXY=172.16.0.0/12` setzen und Yuvomi neu starten.
 
-In Yuvomis `.env`:
+### Schritt 3: die neue Adresse nutzen
 
-```sh
-TRUST_PROXY=172.16.0.0/12
-```
+**Yuvomi ab jetzt über `http://<server>:8088` öffnen.** Das gilt auch für Lesezeichen und die installierte App; einmal neu anmelden. Yuvomi selbst bleibt unverändert und antwortet weiter auf seinem alten Port, QuickShop funktioniert aber nur über den neuen.
 
-Damit liest Yuvomi die echte Adresse jedes Geräts aus dem Proxy. Ohne diese Zeile erscheinen alle Zugriffe als ein einziges Gerät, und Yuvomis Anmelde- und Anfragebegrenzung trifft den ganzen Haushalt gemeinsam. Danach Yuvomi neu starten: `docker compose up -d` im Yuvomi-Ordner.
+### Prüfen
 
-**Ab jetzt Yuvomi über `http://<server>:8088` öffnen.** Das betrifft auch Lesezeichen und die installierte App. Über den alten Port 3000 läuft Yuvomi weiter, QuickShop meldet dort aber „Dienst nicht erreichbar“. Wer den alten Port schließen will, ändert in Yuvomis `docker-compose.yml` die Port-Zeile auf `127.0.0.1:${OIKOS_HTTP_PORT:-3000}:3000`.
-
-**HTTPS mit eigener Domain:** In `deploy/Caddyfile` die Zeile `:80 {` durch den Hostnamen ersetzen (z. B. `einkauf.example.org {`), in `docker-compose.yml` die Ports 80 und 443 veröffentlichen und in Yuvomis `.env` `SESSION_SECURE=true` setzen. Caddy holt das Zertifikat selbst.
-
-### 4. Prüfen
-
-1. In Yuvomi erscheint links **QuickShop**.
-2. Einen Namen ins Suchfeld tippen, **„… anlegen“** tippen, dann **+**: Der Artikel steht auf der Einkaufsliste.
-3. Einstellungen → Module → Aktive Module: QuickShop ohne Fehler.
-4. Einstellungen → Haushalt → Rollen & Berechtigungen: Der Eintrag **QuickShop** regelt, wer den Katalog sehen (`Lesen`) und pflegen (`Schreiben`) darf.
-
-Ohne Docker lässt sich das auch per Kommandozeile prüfen:
+1. In Yuvomi erscheint **QuickShop** und zeigt das Suchfeld, nicht „Dienst nicht erreichbar“.
+2. Einen Namen tippen, **„… anlegen“** tippen, dann **+**: Der Artikel steht auf der Einkaufsliste.
+3. Einstellungen → Haushalt → Rollen & Berechtigungen: Der Eintrag **QuickShop** regelt, wer den Katalog sehen (`Lesen`) und pflegen (`Schreiben`) darf.
 
 ```sh
 curl http://<server>:8088/api/extensions/flessinglabs-quickshop/health   # {"data":{"ok":true}}
 ```
 
-## Aktualisieren
+### Schon einen Reverse-Proxy?
 
-```sh
-cd flessinglabs-quickshop && git pull
-rm -rf /pfad/zu/yuvomi/modules/flessinglabs-quickshop
-cp -r module /pfad/zu/yuvomi/modules/flessinglabs-quickshop
-cd deploy && docker compose up -d --build
+Am QuickShop-Container `PROXY_YUVOMI=false` setzen und den Pfad stattdessen im eigenen Proxy leiten, z. B. in Caddy:
+
+```text
+handle /api/extensions/flessinglabs-quickshop/* {
+	reverse_proxy quickshop:8080
+}
+handle {
+	reverse_proxy yuvomi:3000
+}
 ```
 
-Der Katalog liegt im Volume `quickshop-data` und bleibt bei Updates erhalten. Neue Datenbankversionen migrieren beim Start automatisch. Eine Datenbank aus einer neueren QuickShop-Version lehnt eine ältere ab, statt sie zu beschädigen.
+## Aktualisieren
+
+- **Container:** Unraid → Docker → „Nach Updates suchen“, oder `docker compose pull && docker compose up -d`.
+- **Modul:** erneut über Einstellungen → Module installieren (ein Admin muss es danach wieder einschalten), oder den Ordner von Hand ersetzen.
+
+Der Katalog liegt im Datenordner (auf Unraid `/mnt/user/appdata/flessinglabs-quickshop`) und bleibt bei Updates erhalten. Neue Datenbankversionen migrieren beim Start automatisch. Eine Datenbank aus einer neueren QuickShop-Version lehnt eine ältere ab, statt sie zu beschädigen.
 
 ## Sicherung
 
-```sh
-docker compose -f deploy/docker-compose.yml stop quickshop
-docker run --rm -v deploy_quickshop-data:/data -v "$PWD":/backup alpine \
-  cp /data/quickshop.db /backup/quickshop-$(date +%F).db
-docker compose -f deploy/docker-compose.yml start quickshop
-```
-
-Der Volume-Name hängt vom Compose-Projekt ab (`docker volume ls | grep quickshop`). Yuvomis eigene Sicherung enthält den Katalog **nicht**.
+Die Datei `quickshop.db` im Datenordner sichern, auf Unraid z. B. mit dem Plugin „Appdata Backup“. Yuvomis eigene Sicherung enthält den Katalog **nicht**.
 
 ## Entfernen
 
-1. Einstellungen → Module → QuickShop ausschalten, oder den Ordner `modules/flessinglabs-quickshop` löschen.
-2. `cd deploy && docker compose down` (mit `-v` wird auch der Katalog gelöscht).
-3. Lesezeichen wieder auf Yuvomis Port, `TRUST_PROXY` zurücksetzen.
+1. Einstellungen → Module → QuickShop ausschalten oder löschen.
+2. Den QuickShop-Container entfernen. Den Datenordner nur löschen, wenn auch der Katalog weg soll.
+3. Yuvomi wieder über seinen eigenen Port öffnen und `TRUST_PROXY` zurücksetzen.
 
 Die Einkaufsliste bleibt unberührt.
 
@@ -152,6 +134,7 @@ Die Einkaufsliste bleibt unberührt.
 | `PUBLIC_ORIGIN` | leer | Erlaubte Origins, kommagetrennt. Leer = der Host, den der Browser aufgerufen hat |
 | `YUVOMI_SESSION_COOKIE` | `yuvomi.sid` | Name von Yuvomis Session-Cookie |
 | `AUTH_CACHE_MS` | `5000` | Zwischenspeicher für die Rechteprüfung |
+| `PROXY_YUVOMI` | `true` | Alles außerhalb des QuickShop-Pfads an Yuvomi durchreichen. `false` hinter einem eigenen Reverse-Proxy |
 
 ## API des Katalogdienstes
 
@@ -175,10 +158,10 @@ Genutzte Yuvomi-Endpunkte: `GET /auth/me`, `GET /shopping`, `GET /shopping/:id/i
 ## Entwicklung und Tests
 
 ```sh
-npm test          # 41 Tests: Katalogspeicher, HTTP-Dienst, Einkaufslisten-Logik, Preise, Client
+npm test          # 45 Tests: Katalogspeicher, HTTP-Dienst, Durchreichen, Einkaufslisten-Logik, Preise, Client
 ```
 
-Abnahmetest gegen ein echtes Yuvomi (`tools/e2e/`): Yuvomi, Katalogdienst und `dev-proxy.mjs` lokal starten, dann `node tools/e2e/e2e.mjs <proxy-port> "$PWD/module" setup`. Danach den Dienst neu starten und `… persist` laufen lassen. Geprüft wird: Modul lädt fehlerfrei, Katalog-CRUD, Hinzufügen mit Doppel-Erkennung, Rückgängig, Erhalt nach Neustart, und dass Aufgaben, Kalender, Notizen, Vorrat und Dashboard unverändert antworten.
+Abnahmetest gegen ein echtes Yuvomi (`tools/e2e/`): Yuvomi und den QuickShop-Dienst lokal starten (der Dienst auf dem Eingangsport, `YUVOMI_URL` zeigt auf Yuvomi), dann `node tools/e2e/e2e.mjs <dienst-port> "$PWD/module" setup`. Danach den Dienst neu starten und `… persist` laufen lassen. Geprüft wird: Modul lädt fehlerfrei, Katalog-CRUD, Hinzufügen mit Doppel-Erkennung, Rückgängig, Erhalt nach Neustart, und dass Aufgaben, Kalender, Notizen, Vorrat und Dashboard unverändert antworten.
 
 ## Verwandt
 

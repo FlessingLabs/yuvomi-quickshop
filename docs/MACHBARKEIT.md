@@ -17,7 +17,7 @@ Stand: 2026-11-01. Grundlage: Yuvomi `main` @ `f7dbd29` (MODULES.md, docs/SCOPE.
 ## Entscheidungen (mit FlessingLabs abgestimmt)
 
 - Sidecar mit eigener SQLite-Datei, keine Kernänderung.
-- Da vor der Ziel-Installation kein Proxy steht, liefert QuickShop einen Caddy mit.
+- Da vor der Ziel-Installation (Unraid-Template) kein Proxy steht, reicht der QuickShop-Container selbst alles außerhalb seines Pfads an Yuvomi durch. Ein Container, kein zusätzlicher Proxy. Erster Entwurf mit Caddy verworfen (2026-11-01).
 
 ## Designannahmen
 

@@ -1,45 +1,26 @@
 # FlessingLabs QuickShop - Ergaenzung zu einer bestehenden Yuvomi-Installation.
 #
-# Startet zwei Container NEBEN Yuvomi und aendert Yuvomi selbst nicht:
-#   quickshop  - der Katalogdienst (eigene SQLite-Datei im Volume quickshop-data)
-#   proxy      - Caddy: ein Eingang fuer Yuvomi + QuickShop unter derselben Adresse
+# EIN Container neben Yuvomi, Yuvomi selbst bleibt unveraendert. Er speichert den
+# Katalog (Volume quickshop-data) und ist zugleich der Eingang: alles ausserhalb
+# von /api/extensions/flessinglabs-quickshop reicht er unveraendert an Yuvomi
+# weiter. Yuvomi danach ueber http://<server>:8088 oeffnen.
 #
-# Voraussetzung: Yuvomi laeuft per docker compose im Projekt "yuvomi" (Netzwerk
-# "yuvomi_default", Container erreichbar als "yuvomi"). Abweichende Namen in
-# .env ueber YUVOMI_NETWORK einstellen. Anleitung: README.md, Abschnitt Installation.
+# YUVOMI_URL: wie der Container Yuvomi erreicht. Im selben Compose-Netzwerk
+# http://yuvomi:3000, sonst die Server-Adresse, z. B. http://192.168.1.10:3000.
 
 services:
   quickshop:
-    build: ../sidecar
-    image: flessinglabs/quickshop-sidecar:1.0.0
+    image: ghcr.io/flessinglabs/yuvomi-quickshop:latest
+    # build: ../sidecar              # stattdessen lokal bauen
     container_name: quickshop
     restart: unless-stopped
+    ports:
+      - "0.0.0.0:${QUICKSHOP_HTTP_PORT:-8088}:8080"
     environment:
-      - YUVOMI_URL=http://yuvomi:3000
-      # Optional: feste oeffentliche Adresse(n), kommagetrennt, z. B.
-      # http://192.168.1.10:8088. Leer = die Adresse, die der Browser aufgerufen hat.
+      - YUVOMI_URL=${YUVOMI_URL:-http://yuvomi:3000}
       - PUBLIC_ORIGIN=${QUICKSHOP_PUBLIC_ORIGIN:-}
     volumes:
       - quickshop-data:/data
-    networks: [yuvomi]
-
-  proxy:
-    image: caddy:2-alpine
-    container_name: quickshop-proxy
-    restart: unless-stopped
-    ports:
-      - "0.0.0.0:${QUICKSHOP_HTTP_PORT:-8088}:80"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy-data:/data
-    depends_on: [quickshop]
-    networks: [yuvomi]
 
 volumes:
   quickshop-data:
-  caddy-data:
-
-networks:
-  yuvomi:
-    external: true
-    name: ${YUVOMI_NETWORK:-yuvomi_default}

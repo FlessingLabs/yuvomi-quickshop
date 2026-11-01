@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.0 – 2026-11-01
+
+- **Ein Container statt zwei:** Der QuickShop-Dienst reicht jetzt alles außerhalb seines Pfads selbst an Yuvomi durch. Caddy entfällt. Abschalten mit `PROXY_YUVOMI=false` für Installationen mit eigenem Reverse-Proxy.
+- **Unraid-Template** (`deploy/unraid/`) und fertiges Image `ghcr.io/flessinglabs/yuvomi-quickshop` (amd64, arm64), gebaut per GitHub Actions.
+- Das Image übergibt das Datenverzeichnis beim Start an den `node`-User (wie Yuvomi), damit Unraid-`appdata`-Pfade beschreibbar sind.
+
 ## 1.0.0 – 2026-11-01
 
 Erste Version.

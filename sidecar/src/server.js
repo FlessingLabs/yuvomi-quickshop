@@ -95,7 +95,19 @@ function parseId(raw) {
   return Number(raw);
 }
 
-export function createApp({ store, resolveAuth, publicOrigins = [], log = console }) {
+/** Liegt der Pfad im eigenen Bereich des Dienstes? */
+function ownPath(rawUrl) {
+  const pathname = new URL(rawUrl, 'http://localhost').pathname;
+  return pathname === PREFIX || pathname.startsWith(`${PREFIX}/`);
+}
+
+/**
+ * @param {object} opts
+ * @param {Function} [opts.passThrough]  Reicht alles ausserhalb von PREFIX an Yuvomi weiter
+ *        (proxy.js). Ohne sie antwortet der Dienst dort mit 404 - fuer den Betrieb hinter
+ *        einem eigenen Reverse-Proxy.
+ */
+export function createApp({ store, resolveAuth, publicOrigins = [], passThrough = null, log = console }) {
   const origins = publicOrigins.map((o) => o.replace(/\/+$/, ''));
 
   async function requireUser(req, need) {
@@ -189,6 +201,7 @@ export function createApp({ store, resolveAuth, publicOrigins = [], log = consol
   }
 
   return function app(req, res) {
+    if (passThrough && !ownPath(req.url)) return passThrough(req, res);
     handle(req, res).catch((err) => {
       if (!err.status || err.status >= 500) log.error(`[quickshop] ${req.method} ${req.url}:`, err);
       if (!res.headersSent) sendError(res, err);
