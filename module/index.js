@@ -3,9 +3,13 @@
  *
  * Artikel einmal anlegen, mit einem Tipp auf die Yuvomi-Einkaufsliste setzen.
  *
- * Datenwege:
- *   Katalog        -> eigener Dienst unter /api/extensions/flessinglabs-quickshop (lib/catalog-api.js)
+ * Datenwege (beide ueber Yuvomis /api.js, mit der Sitzung des Mitglieds):
+ *   Katalog        -> Yuvomis Modulspeicher /api/v1/modules/flessinglabs-quickshop/records
+ *                     (lib/catalog-store.js; braucht Yuvomi mit Migration 274)
  *   Einkaufsliste  -> Yuvomis offizielle API /api/v1/shopping (lib/add-to-list.js)
+ *
+ * Katalog-Ids sind UUIDs (Strings), Einkaufslisten-Ids Zahlen - beide nie
+ * miteinander verwechseln.
  *
  * Bedienung bewusst ohne Dialoge: Das Suchfeld ist zugleich das Anlegefeld,
  * Bearbeiten klappt unter der Zeile auf, Loeschen und Hinzufuegen lassen sich
@@ -17,7 +21,7 @@ import { t, getFormatLocale } from '/i18n.js';
 import { esc } from '/utils/html.js';
 import { renderPageHeader, renderPageTitle, renderPageActions, renderPageBody, renderPageSection } from '/utils/page-layout.js';
 import { showToast } from '/utils/toast-show.js';
-import { createCatalogClient } from './lib/catalog-api.js';
+import { createCatalogStore, parseImport, importItems } from './lib/catalog-store.js';
 import { addToShoppingList, createSerialQueue, normalizeName } from './lib/add-to-list.js';
 import { parsePriceInput, formatPrice, priceInputValue } from './lib/price.js';
 
@@ -37,7 +41,7 @@ function icons(el) {
 }
 
 export async function render(container, { signal } = {}) {
-  const catalog = createCatalogClient();
+  const catalog = createCatalogStore(api);
   const queue = createSerialQueue();
   const locale = getFormatLocale?.() || 'de-DE';
 
@@ -71,14 +75,14 @@ export async function render(container, { signal } = {}) {
   async function load() {
     main.setAttribute('aria-busy', 'true');
     try {
-      const [me, items, coreMe, lists] = await Promise.all([
-        catalog.me({ signal }),
+      const [items, coreMe, lists] = await Promise.all([
         catalog.list({ signal }),
         api.get('/auth/me', { signal }),
         api.get('/shopping', { signal }).catch(() => ({ data: [] })),
       ]);
       if (signal?.aborted) return;
-      state.access = me.access;
+      const level = coreMe?.permissions?.modules?.[`ext:${ID}`];
+      state.access = coreMe?.permissions?.admin || level === 'write' ? 'write' : level === 'read' ? 'read' : 'none';
       state.items = items;
       state.shoppingWrite = coreMe?.permissions?.modules?.shopping === 'write';
       state.lists = (lists?.data ?? []).filter((l) => l.accepts_new_items !== 0 && l.accepts_new_items !== false);
@@ -93,15 +97,25 @@ export async function render(container, { signal } = {}) {
     }
   }
 
+  /**
+   * Warum der Katalog nicht geladen werden konnte - so genau, wie es sich
+   * sagen laesst. Ein Yuvomi ohne Modulspeicher ist kein Netzwerkfehler und
+   * bekommt seinen eigenen Satz.
+   */
   function renderLoadError(err) {
-    const forbidden = err?.status === 403;
+    const kind = {
+      storage_unsupported: 'unsupported',
+      storage_unavailable: 'unavailable',
+      forbidden: 'forbidden',
+    }[err?.reason] ?? 'failed';
+    const retry = kind === 'failed' || kind === 'unavailable';
     target.replaceChildren();
     main.replaceChildren();
     main.insertAdjacentHTML('beforeend', `
       <div class="qs-message" role="alert">
-        <p class="qs-message__title">${esc(forbidden ? tr('error.forbidden') : tr('error.unreachable.title'))}</p>
-        ${forbidden ? '' : `<p class="qs-message__text">${esc(tr('error.unreachable.text'))}</p>
-        <button type="button" class="btn btn--secondary" data-action="retry">${esc(tr('error.retry'))}</button>`}
+        <p class="qs-message__title">${esc(tr(`error.load.${kind}.title`))}</p>
+        <p class="qs-message__text">${esc(tr(`error.load.${kind}.text`))}</p>
+        ${retry ? `<button type="button" class="btn btn--secondary" data-action="retry">${esc(tr('error.retry'))}</button>` : ''}
       </div>`);
   }
 
@@ -145,7 +159,8 @@ export async function render(container, { signal } = {}) {
       </div>
       ${hints.map((h) => `<p class="qs-hint">${h}</p>`).join('')}
       <div data-qs="create"></div>
-      <ul class="qs-list" data-qs="list" aria-live="polite"></ul>`);
+      <ul class="qs-list" data-qs="list" aria-live="polite"></ul>
+      ${canWrite() ? importHtml() : ''}`);
     renderList();
   }
 
@@ -179,7 +194,7 @@ export async function render(container, { signal } = {}) {
                  aria-label="${esc(tr('add.aria', { name: item.name }))}"><i data-lucide="plus" aria-hidden="true"></i></button>`
       : '';
     return `
-      <li class="qs-row${editing ? ' qs-row--editing' : ''}" data-id="${item.id}">
+      <li class="qs-row${editing ? ' qs-row--editing' : ''}" data-id="${esc(item.id)}">
         <div class="qs-row__line">
           ${opener}<span class="qs-row__name">${name}</span><span class="qs-row__meta">${esc(metaText(item))}</span>${openerEnd}
           ${add}
@@ -197,12 +212,12 @@ export async function render(container, { signal } = {}) {
         </label>
         <div class="qs-edit__row">
           <div class="qs-edit__field">
-            <span id="qs-qty-${item.id}">${esc(tr('field.quantity'))}</span>
-            <div class="qs-stepper" role="group" aria-labelledby="qs-qty-${item.id}">
+            <span id="qs-qty-${esc(item.id)}">${esc(tr('field.quantity'))}</span>
+            <div class="qs-stepper" role="group" aria-labelledby="qs-qty-${esc(item.id)}">
               <button type="button" class="btn btn--secondary qs-stepper__btn" data-action="qty-down"
                       aria-label="${esc(tr('quantity.less'))}"><i data-lucide="minus" aria-hidden="true"></i></button>
               <input class="form-input qs-stepper__input" name="default_quantity" inputmode="numeric"
-                     pattern="[0-9]*" value="${item.default_quantity}" aria-labelledby="qs-qty-${item.id}">
+                     pattern="[0-9]*" value="${item.default_quantity}" aria-labelledby="qs-qty-${esc(item.id)}">
               <button type="button" class="btn btn--secondary qs-stepper__btn" data-action="qty-up"
                       aria-label="${esc(tr('quantity.more'))}"><i data-lucide="plus" aria-hidden="true"></i></button>
             </div>
@@ -221,6 +236,20 @@ export async function render(container, { signal } = {}) {
             <i data-lucide="trash-2" aria-hidden="true"></i> ${esc(tr('action.delete'))}</button>
         </div>
       </form>`;
+  }
+
+  /** Import aus einer Datei - nur auf ausdruecklichen Wunsch, nie automatisch. */
+  function importHtml() {
+    return `
+      <details class="qs-import">
+        <summary>${esc(tr('import.summary'))}</summary>
+        <p class="qs-hint">${esc(tr('import.text'))}</p>
+        <label class="btn btn--secondary qs-import__pick">
+          ${esc(tr('import.pick'))}
+          <input type="file" accept="application/json,.json" class="sr-only" data-action="import-file">
+        </label>
+        <p class="qs-hint" data-qs="import-result" role="status"></p>
+      </details>`;
   }
 
   function renderList() {
@@ -258,11 +287,17 @@ export async function render(container, { signal } = {}) {
   // ------------------------------------------------------------------
 
   function errorText(err) {
-    if (err?.reason === 'item_exists') return tr('error.exists');
-    if (err?.reason === 'name_required') return tr('error.name');
-    if (err?.reason === 'quantity_invalid') return tr('error.quantity');
-    if (err?.reason === 'price_invalid') return tr('error.price');
-    return tr('error.generic');
+    const known = {
+      item_exists: 'error.exists',
+      name_required: 'error.name',
+      name_too_long: 'error.nameLong',
+      quantity_invalid: 'error.quantity',
+      price_invalid: 'error.price',
+      conflict: 'error.conflict',
+      storage_full: 'error.full',
+      forbidden: 'error.forbidden',
+    }[err?.reason];
+    return tr(known ?? 'error.generic');
   }
 
   function itemById(id) {
@@ -270,7 +305,7 @@ export async function render(container, { signal } = {}) {
   }
 
   function sortItems() {
-    state.items.sort((a, b) => a.name.localeCompare(b.name, locale, { sensitivity: 'base' }) || a.id - b.id);
+    state.items.sort((a, b) => a.name.localeCompare(b.name, locale, { sensitivity: 'base' }) || a.id.localeCompare(b.id));
   }
 
   async function addItem(item, button) {
@@ -295,7 +330,7 @@ export async function render(container, { signal } = {}) {
     const name = state.query.trim();
     if (!name || !canWrite()) return;
     try {
-      const item = await catalog.create({ name, default_quantity: 1 });
+      const item = await catalog.create({ name, default_quantity: 1 }, state.items);
       if (signal?.aborted) return;
       state.items.push(item);
       sortItems();
@@ -308,8 +343,35 @@ export async function render(container, { signal } = {}) {
     }
   }
 
+  /**
+   * Jemand anderes hat den Artikel inzwischen geaendert oder geloescht. Die
+   * aktuelle Fassung wird geladen und gezeigt; gespeichert wird erst, wenn die
+   * Person es noch einmal will - nie still mit der neuen Revision.
+   */
+  async function resolveConflict(id) {
+    const fresh = await catalog.get(id).catch(() => undefined);
+    if (signal?.aborted) return;
+    if (fresh === null) {
+      state.items = state.items.filter((i) => i.id !== id);
+      state.editingId = null;
+      renderList();
+      showToast(tr('error.goneMeanwhile'), 'warning', 5000);
+      return;
+    }
+    if (fresh) {
+      state.items = state.items.map((i) => (i.id === id ? fresh : i));
+      sortItems();
+    }
+    state.editingId = id;
+    renderList();
+    const errorEl = main.querySelector('.qs-edit__error');
+    if (errorEl) { errorEl.textContent = tr('error.conflict'); errorEl.hidden = false; }
+  }
+
   async function saveEdit(form) {
-    const id = Number(form.closest('.qs-row')?.dataset.id);
+    const id = form.closest('.qs-row')?.dataset.id;
+    const current = itemById(id);
+    if (!current) return;
     const errorEl = form.querySelector('.qs-edit__error');
     const fail = (text) => { errorEl.textContent = text; errorEl.hidden = false; };
 
@@ -321,7 +383,7 @@ export async function render(container, { signal } = {}) {
     if (Number.isNaN(price)) return fail(tr('error.price'));
 
     try {
-      const updated = await catalog.update(id, { name, default_quantity: quantity, price_cents: price });
+      const updated = await catalog.update(current, { name, default_quantity: quantity, price_cents: price }, state.items);
       if (signal?.aborted) return;
       state.items = state.items.map((i) => (i.id === id ? updated : i));
       sortItems();
@@ -329,7 +391,9 @@ export async function render(container, { signal } = {}) {
       renderList();
       showToast(tr('toast.saved'), 'success');
     } catch (err) {
-      if (!signal?.aborted) fail(errorText(err));
+      if (signal?.aborted) return;
+      if (err?.reason === 'conflict' || err?.reason === 'not_found') return resolveConflict(id);
+      fail(errorText(err));
     }
   }
 
@@ -337,7 +401,7 @@ export async function render(container, { signal } = {}) {
     const item = itemById(id);
     if (!item) return;
     try {
-      await catalog.remove(id);
+      await catalog.remove(item);
       if (signal?.aborted) return;
       state.items = state.items.filter((i) => i.id !== id);
       state.editingId = null;
@@ -346,7 +410,7 @@ export async function render(container, { signal } = {}) {
       // Belang, denn auf der Einkaufsliste steht nur der Name.
       showToast(tr('toast.deleted', { name: item.name }), 'default', 5000, async () => {
         try {
-          const back = await catalog.create({ name: item.name, default_quantity: item.default_quantity, price_cents: item.price_cents });
+          const back = await catalog.create({ name: item.name, default_quantity: item.default_quantity, price_cents: item.price_cents }, state.items);
           if (signal?.aborted) return;
           state.items.push(back);
           sortItems();
@@ -356,7 +420,30 @@ export async function render(container, { signal } = {}) {
         }
       });
     } catch (err) {
-      if (!signal?.aborted) showToast(errorText(err), 'danger');
+      if (signal?.aborted) return;
+      if (err?.reason === 'conflict' || err?.reason === 'not_found') return resolveConflict(id);
+      showToast(errorText(err), 'danger');
+    }
+  }
+
+  async function runImport(input) {
+    const file = input.files?.[0];
+    input.value = '';
+    const out = main.querySelector('[data-qs="import-result"]');
+    if (!file || !out) return;
+    out.textContent = tr('import.running');
+    try {
+      const { items, invalid } = parseImport(await file.text());
+      const result = await importItems(catalog, items, state.items);
+      if (signal?.aborted) return;
+      state.items.push(...result.items);
+      sortItems();
+      renderList();
+      const parts = [tr('import.result', { created: result.created, skipped: result.skipped, invalid: invalid + result.failed })];
+      if (result.stoppedBy) parts.push(errorText({ reason: result.stoppedBy }));
+      out.textContent = parts.join(' ');
+    } catch (err) {
+      if (!signal?.aborted) out.textContent = err?.reason === 'import_invalid' ? tr('import.invalid') : errorText(err);
     }
   }
 
@@ -393,6 +480,7 @@ export async function render(container, { signal } = {}) {
   }, { signal });
 
   container.addEventListener('change', (e) => {
+    if (e.target.dataset?.action === 'import-file') { runImport(e.target); return; }
     if (e.target.dataset?.action !== 'pick-list') return;
     state.listId = Number(e.target.value);
     storeList(state.listId);
@@ -409,7 +497,7 @@ export async function render(container, { signal } = {}) {
     const el = e.target.closest('[data-action]');
     if (!el || !container.contains(el)) return;
     const row = el.closest('.qs-row');
-    const id = row ? Number(row.dataset.id) : null;
+    const id = row ? row.dataset.id : null;
     switch (el.dataset.action) {
       case 'retry': load(); break;
       case 'create': createFromQuery(); break;

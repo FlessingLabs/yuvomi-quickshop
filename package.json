@@ -1,13 +1,14 @@
 {
   "name": "flessinglabs-quickshop",
-  "version": "1.1.0",
-  "description": "Artikelkatalog für die Einkaufsliste von Yuvomi",
+  "version": "2.0.0",
+  "description": "Artikelkatalog für die Einkaufsliste von Yuvomi (Version 2: Katalog im Yuvomi-Modulspeicher)",
   "license": "MIT",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.13" },
+  "engines": {
+    "node": ">=22.13"
+  },
   "scripts": {
-    "test": "node --test \"sidecar/test/*.test.js\" \"test/module/*.test.js\"",
-    "start": "node sidecar/src/main.js"
+    "test": "node --test \"test/module/*.test.js\""
   }
 }
